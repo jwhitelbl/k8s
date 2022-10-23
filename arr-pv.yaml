@@ -12,4 +12,4 @@ spec:
   nfs:
     path: /storage/kubernetes
     server: 10.0.0.31
-  persistentVolumeReclaimPolicy: Retain
+  persistentVolumeReclaimPolicy: Delete
