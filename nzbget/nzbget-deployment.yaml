@@ -1,25 +1,7 @@
 apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: nzbget
-  namespace: arr
-spec:
-  storageClassName: nfs
-  capacity:
-    storage: 50Mi
-  accessModes:
-  - ReadWriteOnce
-  nfs:
-    path: /storage/kubernetes
-    server: 10.0.0.31
-  persistentVolumeReclaimPolicy: Retain
-  
----
-
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: nzbget-config-pv-claim
+  name: nzbget-config-pvc
   namespace: arr
 spec:
   storageClassName: nfs
