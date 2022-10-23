@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: sonarr
-  namespace: sonarr
+  namespace: arr
 spec:
   storageClassName: nfs
   capacity:
@@ -20,7 +20,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: sonarr-downloads-pv-claim
-  namespace: sonarr
+  namespace: arr
 spec:
   storageClassName: nfs
   accessModes:
@@ -35,7 +35,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: sonarr
-  namespace: sonarr
+  namespace: arr
 spec:
   replicas: 1
   selector:
@@ -81,7 +81,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: sonarr
-  namespace: sonarr
+  namespace: arr
   labels:
     app: sonarr
     kubernetes.io/name: "sonarr"
@@ -99,7 +99,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: sonarr
-  namespace: sonarr
+  namespace: arr
 spec:
   rules:
   - host: sonarr.local
