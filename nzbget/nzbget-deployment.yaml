@@ -3,10 +3,12 @@ kind: PersistentVolumeClaim
 metadata:
   name: nzbget-config-pvc
   namespace: arr
+  annotations:
+    volumeType: local
 spec:
-  storageClassName: nfs
   accessModes:
     - ReadWriteOnce
+  storageClassName: local-path
   resources:
     requests:
       storage: 50Mi

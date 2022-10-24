@@ -3,13 +3,16 @@ kind: PersistentVolumeClaim
 metadata:
   name: prowlarr-config-pvc
   namespace: arr
+  annotations:
+    volumeType: local
 spec:
-  storageClassName: nfs
   accessModes:
     - ReadWriteOnce
+  storageClassName: local-path
   resources:
     requests:
       storage: 50Mi
+      
       
 ---
 
@@ -47,8 +50,8 @@ spec:
           mountPath: /config
       volumes:
         - name: prowlarr
-          hostPath:
-            path: /etc/prowlarr
+          persistentVolumeClaim:
+            claimName: sonarr-config-pvc
 
 ---
 apiVersion: v1
