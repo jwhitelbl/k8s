@@ -30,13 +30,13 @@ spec:
         volumeMounts:
         - name: nzbget
           mountPath: /config
-        - name: nzbget-downloads
-          mountPath: /downloads
+        - name: nzbget-download
+          mountPath: /download
       volumes:
         - name: nzbget
           hostPath:
             path: /etc/nzbget
-        - name: nzbget-downloads
+        - name: nzbget-download
           hostPath:
             path: /storage/Uploads/Usenet/nzbget
 
