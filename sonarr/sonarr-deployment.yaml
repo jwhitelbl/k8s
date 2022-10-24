@@ -15,23 +15,6 @@ spec:
       
 ---
 
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: sonarr-config-pvc
-  namespace: arr
-  annotations:
-    volumeType: local
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: local-path
-  resources:
-    requests:
-      storage: 500Mi
-
----
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -70,8 +53,8 @@ spec:
           mountPath: /storage/Uploads/Usenet/nzbdrone/sorted
       volumes:
         - name: sonarr
-          persistentVolumeClaim:
-            claimName: sonarr-config-pvc
+          hostPath:
+            path: /etc/sonarr
         - name: sonarr-downloads
           persistentVolumeClaim:
             claimName: sonarr-downloads-pvc
