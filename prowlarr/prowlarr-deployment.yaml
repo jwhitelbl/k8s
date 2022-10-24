@@ -51,7 +51,7 @@ spec:
       volumes:
         - name: prowlarr
           persistentVolumeClaim:
-            claimName: sonarr-config-pvc
+            claimName: prowlarr-config-pvc
 
 ---
 apiVersion: v1
