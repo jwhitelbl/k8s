@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: utorrent
+  namespace: arr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: utorrent
+  template:
+    metadata:
+      labels:
+        app: utorrent
+    spec:
+      containers:
+      - name: utorrent
+        image: ekho/utorrent
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: GID
+          value: "666"
+        - name: UID
+          value: "1002"
+        - name: TZ
+          value: "America/Los_Angeles"
+        service:
+        volumeMounts:
+        - name: torrents
+          mountPath: /utorrent/torrents
+        - name: temp
+          mountPath: /utorrent/temp
+        - name: autoload
+          mountPath: /utorrent/autoload
+        - name: request
+          mountPath: /utorrent/request
+        - name: download
+          mountPath: /data
+      volumes:
+        - name: torrents
+          hostPath:
+            path: /storage/Uploads/BT/utorrent/torrents
+        - name: temp
+          hostPath:
+            path: /storage/Uploads/BT/utorrent/temp
+        - name: autoload
+          hostPath:
+            path: /storage/Uploads/BT/utorrent/autoload
+        - name: request
+          hostPath:
+            path: /storage/Uploads/BT/utorrent/request
+        - name: download
+          hostPath:
+            path: /storage/Uploads/BT/utorrent/data
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: utorrent
+  namespace: arr
+  labels:
+    app: utorrent
+    kubernetes.io/name: "utorrent"
+spec:
+  selector:
+    app: utorrent
+  ports:
+  - name: utorrent
+    port: 80
+    targetPort: 8080
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: utorrent
+  namespace: arr
+spec:
+  rules:
+  - host: utorrent.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: utorrent
+            port:
+              number: 80
+  - host: utorrent
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: utorrent
+            port:
+              number: 80
