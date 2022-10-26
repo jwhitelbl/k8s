@@ -44,10 +44,10 @@ spec:
             path: /etc/transmission
         - name: watch
           hostPath:
-            path: /storage/Uploads/BT/transmission/watch
+            path: /storage/Uploads/BT/watch
         - name: downloads
           hostPath:
-            path: /storage/Uploads/Usenet/nzbget
+            path: /storage/Uploads/Usenet/sonarr
 
 ---
 apiVersion: v1
