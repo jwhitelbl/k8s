@@ -1,0 +1,1 @@
+kubectl delete deploy transmission -n arr; kubectl delete svc transmission -n arr; kubectl delete ingress transmission -n arr; kubectl delete svc transmission-udp -n arr; kubectl delete svc transmission-tcp -n arr
