@@ -54,7 +54,45 @@ spec:
         - name: download
           hostPath:
             path: /storage/Uploads/BT/utorrent/data
-            
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: utorrent-udp
+  namespace: arr
+  annotations:
+    metallb.universe.tf/allow-shared-ip: utorrent
+spec:
+  selector:
+    app: utorrent
+  ports:
+  - port: 6881
+    targetPort: 6881
+    name: bittorrent-udp
+    protocol: UDP
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.41
+  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: utorrent-tcp
+  namespace: arr
+  annotations:
+    metallb.universe.tf/allow-shared-ip: utorrent
+spec:
+  selector:
+    app: utorrent
+  ports:
+  - port: 6881
+    targetPort: 6881
+    name: bittorrent-tcp
+    protocol: TCP
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.41
+  
 ---
 apiVersion: v1
 kind: Service
@@ -101,3 +139,4 @@ spec:
             name: utorrent
             port:
               number: 80
+              
