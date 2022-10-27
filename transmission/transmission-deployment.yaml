@@ -47,7 +47,7 @@ spec:
             path: /storage/Uploads/BT/watch
         - name: downloads
           hostPath:
-            path: /storage/Uploads/Usenet/sonarr
+            path: /storage/Uploads/Usenet
 
 ---
 apiVersion: v1

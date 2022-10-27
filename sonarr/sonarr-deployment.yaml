@@ -40,10 +40,10 @@ spec:
             path: /etc/sonarr
         - name: sonarr-download
           hostPath:
-            path: /storage/Uploads/Usenet/nzbget
+            path: /storage/Uploads/Usenet
         - name: sonarr-lib
           hostPath:
-            path: /storage/Uploads/Usenet/sonarr/complete
+            path: /storage/Uploads/Usenet/complete
             
 ---
 apiVersion: v1

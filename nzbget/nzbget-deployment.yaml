@@ -38,7 +38,7 @@ spec:
             path: /etc/nzbget
         - name: nzbget-download
           hostPath:
-            path: /storage/Uploads/Usenet/sonarr
+            path: /storage/Uploads/Usenet
 
 ---
 apiVersion: v1
