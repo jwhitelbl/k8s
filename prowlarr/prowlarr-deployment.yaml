@@ -26,7 +26,6 @@ spec:
           value: "1002"
         - name: TZ
           value: "America/Los_Angeles" 
-        service:
         volumeMounts:
         - name: prowlarr
           mountPath: /config

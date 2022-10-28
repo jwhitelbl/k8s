@@ -30,14 +30,13 @@ spec:
           value: "6881"
         - name: TRANSMISSION_WEB_HOME
           value: "/flood-for-transmission/"
-        service:
         volumeMounts:
         - name: config
           mountPath: /config
         - name: watch
           mountPath: /watch
-        - name: downloads
-          mountPath: /downloads
+        - name: download
+          mountPath: /download
       volumes:
         - name: config
           hostPath:
@@ -45,7 +44,7 @@ spec:
         - name: watch
           hostPath:
             path: /storage/Uploads/BT/watch
-        - name: downloads
+        - name: download
           hostPath:
             path: /storage/Uploads/Usenet
 
