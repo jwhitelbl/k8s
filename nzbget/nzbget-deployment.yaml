@@ -64,6 +64,7 @@ metadata:
   name: nzbget
   namespace: arr
 spec:
+  ingressClassName: nginx
   rules:
   - host: nzbget.local
     http:
