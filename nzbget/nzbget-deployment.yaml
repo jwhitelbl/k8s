@@ -1,3 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nzbget-config
+  namespace: arr
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: csi-rbd-sc
+  resources:
+    requests:
+      storage: 20Mi 
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,14 +40,14 @@ spec:
         - name: TZ
           value: "America/Los_Angeles"
         volumeMounts:
-        - name: nzbget
+        - name: nzbget-config
           mountPath: /config
         - name: nzbget-download
           mountPath: /download
       volumes:
-        - name: nzbget
-          hostPath:
-            path: /etc/nzbget
+        - name: nzbget-config
+          persistentVolumeClaim:
+            claimName: nzbget-config
         - name: nzbget-download
           hostPath:
             path: /storage/Uploads/Usenet
