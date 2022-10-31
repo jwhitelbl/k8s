@@ -1,0 +1,19 @@
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+   name: csi-cephfs-sc
+provisioner: cephfs.csi.ceph.com
+parameters:
+   clusterID: 9372e7d0-5818-11ed-8ae4-020cb01dd32e
+   fsName: cephfs
+   csi.storage.k8s.io/provisioner-secret-name: csi-cephfs-secret
+   csi.storage.k8s.io/provisioner-secret-namespace: ceph-csi-cephfs
+   csi.storage.k8s.io/controller-expand-secret-name: csi-cephfs-secret
+   csi.storage.k8s.io/controller-expand-secret-namespace: ceph-csi-cephfs
+   csi.storage.k8s.io/node-stage-secret-name: csi-cephfs-secret
+   csi.storage.k8s.io/node-stage-secret-namespace: ceph-csi-cephfs
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+mountOptions:
+   - discard
