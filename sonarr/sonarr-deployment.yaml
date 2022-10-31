@@ -1,3 +1,17 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-config
+  namespace: arr
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: csi-rbd-sc
+  resources:
+    requests:
+      storage: 5Gi
+      
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,16 +41,16 @@ spec:
         - name: TZ
           value: "America/Los_Angeles"
         volumeMounts:
-        - name: sonarr
+        - name: sonarr-config
           mountPath: /config
         - name: sonarr-download
           mountPath: /download
         - name: sonarr-lib
           mountPath: /tv
       volumes:
-        - name: sonarr
-          hostPath:
-            path: /etc/sonarr
+        - name: sonarr-config
+          persistentVolumeClaim:
+            claimName: sonarr-config
         - name: sonarr-download
           hostPath:
             path: /storage/Uploads/Usenet

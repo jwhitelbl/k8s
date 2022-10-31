@@ -1,3 +1,17 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: transmission-config
+  namespace: arr
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: csi-rbd-sc
+  resources:
+    requests:
+      storage: 20Mi 
+
+---      
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,7 +45,7 @@ spec:
         - name: TRANSMISSION_WEB_HOME
           value: "/flood-for-transmission/"
         volumeMounts:
-        - name: config
+        - name: transmission-config
           mountPath: /config
         - name: watch
           mountPath: /watch
@@ -41,6 +55,9 @@ spec:
         - name: config
           hostPath:
             path: /etc/transmission
+        - name: transmission-config
+          persistentVolumeClaim:
+            claimName: transmission-config
         - name: watch
           hostPath:
             path: /storage/Uploads/BT/watch
