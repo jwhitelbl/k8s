@@ -3,7 +3,7 @@ echo "============" >> /config/unpack.log
 date >> /config/unpack.log
 echo "$TR_TORRENT_DIR/$TR_TORRENT_NAME" >> /config/unpack.log
 cd $TR_TORRENT_DIR/$TR_TORRENT_NAME
-FILE=`ls | grep -E 'rar|r00' | tail -1`
+FILE=`find . | grep -E 'rar|r00' | tail -1`
 
 if [ "$FILE" != "" ]; then
 	echo "$FILE" >> /config/unpack.log
