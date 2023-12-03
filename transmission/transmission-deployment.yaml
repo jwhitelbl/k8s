@@ -1,0 +1,161 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: transmission-config
+  namespace: arr
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: csi-rbd-sc
+  resources:
+    requests:
+      storage: 20Mi 
+
+---      
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transmission
+  namespace: arr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transmission
+  template:
+    metadata:
+      labels:
+        app: transmission
+    spec:
+      containers:
+      - name: transmission
+        image: linuxserver/transmission
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9091
+        env:
+        - name: PGID
+          value: "666"
+        - name: PUID
+          value: "1002"
+        - name: TZ
+          value: "America/Los_Angeles"
+        - name: PEERPORT
+          value: "6881"
+        - name: TRANSMISSION_WEB_HOME
+          value: "/flood-for-transmission/"
+        volumeMounts:
+        - name: transmission-config
+          mountPath: /config
+        - name: watch
+          mountPath: /watch
+        - name: download
+          mountPath: /download
+      volumes:
+        - name: config
+          hostPath:
+            path: /etc/transmission
+        - name: transmission-config
+          persistentVolumeClaim:
+            claimName: transmission-config
+        - name: watch
+          hostPath:
+            path: /storage/Uploads/BT/watch
+        - name: download
+          hostPath:
+            path: /storage/Uploads/Usenet
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission-udp
+  namespace: arr
+  annotations:
+    metallb.universe.tf/allow-shared-ip: transmission
+spec:
+  selector:
+    app: transmission
+  ports:
+  - port: 51413
+    targetPort: 51413
+    name: bittorrent-udp
+    protocol: UDP
+  - port: 6881
+    targetPort: 6881
+    name: peer-udp
+    protocol: UDP
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.42
+  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission-tcp
+  namespace: arr
+  annotations:
+    metallb.universe.tf/allow-shared-ip: transmission
+spec:
+  selector:
+    app: transmission
+  ports:
+  - port: 51413
+    targetPort: 51413
+    name: bittorrent-tcp
+    protocol: TCP
+  - port: 6881
+    targetPort: 6881
+    name: peer-tcp
+    protocol: TCP
+  type: LoadBalancer
+  loadBalancerIP: 10.0.0.42
+  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission
+  namespace: arr
+  labels:
+    app: transmission
+    kubernetes.io/name: "transmission"
+spec:
+  selector:
+    app: transmission
+  ports:
+  - name: transmission
+    port: 80
+    targetPort: 9091
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: transmission
+  namespace: arr
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: transmission.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: transmission
+            port:
+              number: 80
+  - host: transmission
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: transmission
+            port:
+              number: 80
+              

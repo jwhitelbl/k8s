@@ -1,0 +1,163 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: stream-playlist
+  namespace: stream
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: cephfs
+  resources:
+    requests:
+      storage: 20Mi 
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cvlc
+  namespace: stream
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cvlc
+  template:
+    metadata:
+      labels:
+        app: cvlc
+    spec:
+      containers:
+      - name: cvlc
+        image: gimpbully/cvlc
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+        volumeMounts:
+        - name: stream-playlist
+          mountPath: /playlist
+        - name: media-xmas
+          mountPath: /storage/Video/Xmas
+        env:
+        - name: PLAYLIST
+          value: "XMas-Full.m3u"
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vlc-admin
+              key: password
+      volumes:
+        - name: stream-playlist
+          persistentVolumeClaim:
+            claimName: stream-playlist
+        - name: media-xmas
+          hostPath:
+            path: /storage/Video/Xmas
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-rtmp
+  namespace: stream
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-rtmp
+  template:
+    metadata:
+      labels:
+        app: nginx-rtmp
+    spec:
+      containers:
+      - name: nginx-rtmp
+        image: gimpbully/nginx-rtmp
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        - containerPort: 8080
+        - containerPort: 1935
+        env:
+        - name: RTMP_CONNECTIONS
+          value: "768"
+        - name: RTMP_STREAM_NAMES
+          value: "live"
+        - name: HLS
+          value: "true"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-rtmp
+  namespace: stream
+  labels:
+    app: nginx-rtmp
+    kubernetes.io/name: "nginx-rtmp"
+spec:
+  selector:
+    app: nginx-rtmp
+  ports:
+  - name: nginx
+    port: 80
+    targetPort: 80
+  - name: nginx-stream
+    port: 8080
+    targetPort: 8080
+  - name: nginx-rtmp
+    port: 1935
+    targetPort: 1935
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cvlc
+  namespace: stream
+  labels:
+    app: cvlc
+    kubernetes.io/name: "cvlc"
+spec:
+  selector:
+    app: cvlc
+  ports:
+  - name: cvlc
+    port: 8081
+    targetPort: 8081
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stream
+  namespace: stream
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: stream.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-rtmp
+            port:
+              number: 80
+      - path: /stats
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-rtmp
+            port:
+              number: 8080
+  - host: stream-admin.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cvlc
+            port:
+              number: 8081
+              

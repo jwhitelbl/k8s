@@ -1,0 +1,203 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-config
+  namespace: plex
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi 
+  storageClassName: csi-rbd-sc
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-transcode
+  namespace: plex
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Gi 
+  storageClassName: nfs
+
+---  
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plexserver
+  namespace: plex
+  labels:
+    app: plexserver
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: plexserver
+  template:
+    metadata:
+      labels:
+        app: plexserver
+    spec:
+      volumes:
+      - name: plex-config
+        persistentVolumeClaim:
+          claimName: plex-config
+      - name: plex-transcode
+        persistentVolumeClaim:
+          claimName: plex-transcode
+      - name: nfs-movies
+        nfs:
+          server: 10.0.0.31
+          path: /storage/Movies
+      - name: nfs-usenet
+        nfs:
+          server: 10.0.0.31
+          path: /storage/Uploads/Usenet
+      - name: nfs-music
+        nfs:
+          server: 10.0.0.31
+          path: /storage/Music
+      containers:
+      - name: plexserver
+        image: plexinc/pms-docker:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: 2Gi
+          limits:
+            gpu.intel.com/i915: 1
+        ports:
+        - containerPort: 32400     # < required network portnumber. See https://hub.docker.com/r/linuxserver/plex
+          name: pms-web            # < reference name from the port in the service yaml
+          protocol: TCP
+        - containerPort: 32469
+          name: dlna-tcp
+          protocol: TCP
+        - containerPort: 1900
+          name: dlna-udp
+          protocol: UDP
+        - containerPort: 3005
+          name: plex-companion
+          protocol: TCP  
+        - containerPort: 5353
+          name: discovery-udp
+          protocol: UDP  
+        - containerPort: 8324
+          name: plex-roku
+          protocol: TCP  
+        - containerPort: 32410
+          name: gdm-32410
+          protocol: UDP
+        - containerPort: 32412
+          name: gdm-32412
+          protocol: UDP
+        - containerPort: 32413
+          name: gdm-32413
+          protocol: UDP
+        - containerPort: 32414
+          name: gdm-32414
+          protocol: UDP
+        env:
+        - name: TZ
+          value: America/Los_Angeles
+        - name: VERSION
+          value: latest
+        - name: PGID
+          value: "666"    # < ASCII code for '100'
+        - name: PUID
+          value: "1004" # < ACII code for '1035'
+        - name: ADVERTISE_IP
+          value: "http://10.0.0.43:32400"
+        - name: ALLOWED_NETWORKS
+          value: "10.0.0.0/8"
+        volumeMounts:
+        - name: nfs-movies
+          mountPath: /data/Movies
+        - name: nfs-usenet
+          mountPath: /data/Usenet
+        - name: nfs-music
+          mountPath: /data/music
+        - name: plex-config
+          mountPath: /config
+        - name: plex-transcode
+          mountPath: /transcode
+      restartPolicy: Always
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: plex-udp              # < name of the service
+  namespace: plex       # < namespace where to place service
+  annotations:
+    metallb.universe.tf/allow-shared-ip: plexserver # < annotation name to combine the Service IP, make sure it's same name as in the service UDP yaml
+spec:
+  selector:
+    app: plexserver           # < reference to the deployment (connects the service with the deployment)
+  ports:
+  - port: 1900                # < port to open on the outside on the server
+    targetPort: 1900          # < targetport. port on the pod to passthrough
+    name: dlna-udp            # < reference name for the port in the deployment yaml
+    protocol: UDP
+  - port: 5353
+    targetPort: 5353
+    name: discovery-udp
+    protocol: UDP
+  - port: 32410
+    targetPort: 32410
+    name: gdm-32410
+    protocol: UDP
+  - port: 32412
+    targetPort: 32412
+    name: gdm-32412
+    protocol: UDP
+  - port: 32413
+    targetPort: 32413
+    name: gdm-32413
+    protocol: UDP
+  - port: 32414
+    targetPort: 32414
+    name: gdm-32414
+    protocol: UDP
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster # fix worker node network
+  loadBalancerIP: 10.0.0.43  # < IP to access your plexserver. Should be one from the MetalLB range and the same as the UDP yaml
+---
+ 
+kind: Service
+apiVersion: v1
+metadata:
+  name: plex-tcp              # < name of the service
+  namespace: plex       # < namespace where to place service
+  annotations:
+    metallb.universe.tf/allow-shared-ip: plexserver  # < annotation name to combine the Service IP, make sure it's same name as in the service UDP yaml
+spec:
+  selector:
+    app: plexserver           # < reference to the deployment (connects the service with the deployment)
+  ports:                      
+  - port: 32400               # < port to open on the outside on the server
+    targetPort: 32400         # < targetport. port on the pod to passthrough
+    name: pms-web             # < reference name for the port in the deployment yaml
+    protocol: TCP
+  - port: 3005
+    targetPort: 3005
+    name: plex-companion
+  - port: 8324
+    name: plex-roku
+    targetPort: 8324  
+    protocol: TCP  
+  - port: 32469
+    targetPort: 32469
+    name: dlna-tcp
+    protocol: TCP
+  type: LoadBalancer
+  externalTrafficPolicy: Cluster
+  loadBalancerIP: 10.0.0.43  # < IP to access your plexserver. Should be one from the MetalLB range and the same as the TCP yaml
+  
+  

@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-config
+  namespace: arr
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: csi-rbd-sc
+  resources:
+    requests:
+      storage: 1Gi
+      
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  namespace: arr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: radarr
+  template:
+    metadata:
+      labels:
+        app: radarr
+    spec:
+      containers:
+      - name: radarr
+        image: linuxserver/radarr
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8989
+        env:
+        - name: PGID
+          value: "666"
+        - name: PUID
+          value: "1002"
+        - name: TZ
+          value: "America/Los_Angeles"
+        volumeMounts:
+        - name: radarr-config
+          mountPath: /config
+        - name: radarr-download
+          mountPath: /download
+        - name: radarr-lib
+          mountPath: /movies
+      volumes:
+        - name: radarr-config
+          persistentVolumeClaim:
+            claimName: radarr-config
+        - name: radarr-download
+          hostPath:
+            path: /storage/Uploads/Usenet
+        - name: radarr-lib
+          hostPath:
+            path: /storage/Uploads/Usenet/movies
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr
+  namespace: arr
+  labels:
+    app: radarr
+    kubernetes.io/name: "radarr"
+spec:
+  selector:
+    app: radarr
+  ports:
+  - name: radarr
+    port: 80
+    targetPort: 7878
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: radarr
+  namespace: arr
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: radarr.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: radarr
+            port:
+              number: 80
+  - host: radarr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: radarr
+            port:
+              number: 80

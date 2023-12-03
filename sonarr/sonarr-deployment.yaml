@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-config
+  namespace: arr
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: csi-rbd-sc
+  resources:
+    requests:
+      storage: 5Gi
+      
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: arr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      containers:
+      - name: sonarr
+        image: linuxserver/sonarr
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8989
+        env:
+        - name: PGID
+          value: "666"
+        - name: PUID
+          value: "1002"
+        - name: TZ
+          value: "America/Los_Angeles"
+        volumeMounts:
+        - name: sonarr-config
+          mountPath: /config
+        - name: sonarr-download
+          mountPath: /download
+        - name: sonarr-lib
+          mountPath: /tv
+      volumes:
+        - name: sonarr-config
+          persistentVolumeClaim:
+            claimName: sonarr-config
+        - name: sonarr-download
+          hostPath:
+            path: /storage/Uploads/Usenet
+        - name: sonarr-lib
+          hostPath:
+            path: /storage/Uploads/Usenet/complete
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr
+  namespace: arr
+  labels:
+    app: sonarr
+    kubernetes.io/name: "sonarr"
+spec:
+  selector:
+    app: sonarr
+  ports:
+  - name: sonarr
+    port: 80
+    targetPort: 8989
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sonarr
+  namespace: arr
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: sonarr.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sonarr
+            port:
+              number: 80
+  - host: sonarr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sonarr
+            port:
+              number: 80
