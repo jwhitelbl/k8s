@@ -47,7 +47,7 @@ RUN	cd /tmp										&&	\
 	make install
 
 FROM alpine:latest
-LABEL org.opencontainers.image.authors="jason@jasonrivers.co.uk"
+LABEL org.opencontainers.image.authors="jason@jasonrivers.co.uk, gimpbully@gmail.com"
 RUN apk update		&& \
 	apk add			   \
 		openssl		   \
@@ -58,8 +58,8 @@ RUN apk update		&& \
 COPY --from=0 /opt/nginx /opt/nginx
 COPY --from=0 /tmp/nginx-rtmp-module/stat.xsl /opt/nginx/conf/stat.xsl
 RUN rm /opt/nginx/conf/nginx.conf
+RUN mkdir -p /var/www/html/stream
 ADD run.sh /
-ADD index.html /var/www/html/stream/index.html
 
 EXPOSE 1935
 EXPOSE 8080

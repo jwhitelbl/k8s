@@ -94,3 +94,4 @@ spec:
             name: prowlarr
             port:
               number: 80
+              

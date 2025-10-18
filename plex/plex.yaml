@@ -70,6 +70,7 @@ spec:
         resources:
           requests:
             memory: 2Gi
+            gpu.intel.com/i915: 1
           limits:
             gpu.intel.com/i915: 1
         ports:
@@ -134,7 +135,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: plex-udp              # < name of the service
-  namespace: plex       # < namespace where to place service
+  namespace: plex
   annotations:
     metallb.universe.tf/allow-shared-ip: plexserver # < annotation name to combine the Service IP, make sure it's same name as in the service UDP yaml
 spec:

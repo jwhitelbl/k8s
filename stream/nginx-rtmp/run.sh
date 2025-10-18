@@ -138,5 +138,9 @@ else
     echo "CONFIG EXISTS - Not creating!"
 fi
 
+cp /playlist/stat.xsl /var/www/html/stream/
+cp /playlist/index.html /var/www/html/stream/
+cp /playlist/stat.xsl /opt/nginx/conf/
+
 echo "Starting server"
 /opt/nginx/sbin/nginx -g "daemon off;"

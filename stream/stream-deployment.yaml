@@ -85,6 +85,14 @@ spec:
           value: "live"
         - name: HLS
           value: "true"
+        volumeMounts:
+        - name: stream-playlist
+          mountPath: /playlist
+      volumes:
+        - name: stream-playlist
+          persistentVolumeClaim:
+            claimName: stream-playlist
+
 ---
 apiVersion: v1
 kind: Service
